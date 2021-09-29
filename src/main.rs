@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 
-use std::{convert::From, default::Default};
+use std::{convert::From, default::Default, ops::Neg};
 
 mod draw;
 mod enemy;
@@ -71,31 +71,46 @@ trait Mobile: Actor {
         self.move_by(Vec2::new(x, y));
     }
 
-    fn handle_collision(&mut self, collider: &impl Actor) {
+    fn handle_collision(&mut self, desired_movement: Vec2, collider: &impl Actor) -> Vec2 {
+        let mut x = desired_movement * Vec2::X;
+        let mut y = desired_movement * Vec2::Y;
+
         let my_bb = self.bounding_box();
-        let other_bb = collider.bounding_box();
-        if !my_bb.overlaps(&other_bb) {
-            return;
+        let x_bb = my_bb.offset(x);
+        let y_bb = my_bb.offset(y);
+
+        let collider_bb = collider.bounding_box();
+        if x.length() > 0.0 {
+            if let Some(intersection) = my_bb.offset(x).intersect(collider_bb) {
+                if intersection.h > 0.0 {
+                    x += Vec2::new(
+                        if intersection.left() == x_bb.left() {
+                            intersection.w
+                        } else {
+                            intersection.w.neg()
+                        },
+                        0.0,
+                    );
+                }
+            }
         }
 
-        let my_center_x = my_bb.x + my_bb.w / 2.0;
-        let other_center_x = other_bb.x + other_bb.w / 2.0;
+        if y.length() > 0.0 {
+            if let Some(intersection) = y_bb.intersect(collider_bb) {
+                if intersection.w > 0.0 {
+                    y += Vec2::new(
+                        0.0,
+                        if intersection.top() == y_bb.top() {
+                            intersection.h
+                        } else {
+                            intersection.h.neg()
+                        },
+                    );
+                }
+            }
+        }
 
-        let dx = if my_center_x < other_center_x {
-            other_bb.left() - my_bb.right()
-        } else {
-            other_bb.right() - my_bb.left()
-        };
-
-        let my_center_y = my_bb.y + my_bb.h / 2.0;
-        let other_center_y = other_bb.y + other_bb.h / 2.0;
-        let dy = if my_center_y < other_center_y {
-            other_bb.top() - my_bb.bottom()
-        } else {
-            other_bb.bottom() - my_bb.top()
-        };
-
-        self.move_by(Vec2::new(dx, dy));
+        x + y
     }
 }
 

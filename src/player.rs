@@ -57,21 +57,23 @@ impl Player {
         );
     }
 
-    pub fn handle_input(&mut self) {
+    pub fn handle_input(&mut self) -> Vec2 {
+        let mut dx = 0.0;
+        let mut dy = 0.0;
         if is_key_down(KeyCode::W) {
-            self.y -= self.speed;
+            dy -= self.speed;
         }
         if is_key_down(KeyCode::S) {
-            self.y += self.speed;
+            dy += self.speed;
         }
         if is_key_down(KeyCode::D) {
-            self.x += self.speed;
+            dx += self.speed;
         }
         if is_key_down(KeyCode::A) {
-            self.x -= self.speed;
+            dx -= self.speed;
         }
 
-        self.screen_constrain();
+        Vec2::new(dx, dy)
     }
 
     pub fn shoot(&self, direction: Direction) -> Projectile {

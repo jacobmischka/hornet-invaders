@@ -81,10 +81,6 @@ impl World {
         self.handle_input();
         self.player.tick();
 
-        for t in &self.terrain {
-            self.player.handle_collision(t);
-        }
-
         for projectile in &mut self.projectiles {
             projectile.tick();
 
@@ -101,6 +97,11 @@ impl World {
         }
 
         for enemy in &mut self.enemies {
+            let mut desired_movement = enemy.desired_movement();
+            for t in &self.terrain {
+                desired_movement = enemy.handle_collision(desired_movement, t);
+            }
+            enemy.move_by(desired_movement);
             enemy.tick();
 
             if self.player.state == PlayerState::Ok {
@@ -124,7 +125,14 @@ impl World {
     }
 
     fn handle_input(&mut self) {
-        self.player.handle_input();
+        let mut player_movement = self.player.handle_input();
+
+        for t in &self.terrain {
+            player_movement = self.player.handle_collision(player_movement, t);
+        }
+
+        self.player.move_by(player_movement);
+        self.player.screen_constrain();
 
         if self.projectiles.len() < self.player.max_projectiles {
             if is_key_pressed(KeyCode::Up) {

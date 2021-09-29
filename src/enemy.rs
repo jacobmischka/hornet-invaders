@@ -10,6 +10,15 @@ pub struct Enemy {
     pub speed: f32,
 }
 
+impl Enemy {
+    pub fn desired_movement(&self) -> Vec2 {
+        Vec2::new(
+            rand::gen_range(-1.0 * self.speed, self.speed),
+            rand::gen_range(-1.0 * self.speed, self.speed),
+        )
+    }
+}
+
 impl Default for Enemy {
     fn default() -> Enemy {
         let width = 50.0;
@@ -28,13 +37,7 @@ impl Default for Enemy {
 
 impl Actor for Enemy {
     fn tick(&mut self) {
-        let d = Vec2::new(
-            rand::gen_range(-1.0 * self.speed, self.speed),
-            rand::gen_range(-1.0 * self.speed, self.speed),
-        );
-
-        self.move_by(d);
-        self.screen_constrain();
+        //
     }
 
     fn bounding_box(&self) -> Rect {
