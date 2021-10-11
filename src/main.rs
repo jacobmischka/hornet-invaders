@@ -5,11 +5,13 @@ use std::{convert::From, default::Default, ops::Neg};
 mod draw;
 mod enemy;
 mod player;
+mod terrain;
 mod world;
 
 use draw::*;
 use enemy::*;
 use player::*;
+use terrain::*;
 use world::*;
 
 fn window_conf() -> Conf {
@@ -25,6 +27,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut world = World::default();
+    world.reset();
 
     loop {
         world.tick();
@@ -175,4 +178,10 @@ enum GameState {
     Game,
     Victory,
     Defeat,
+}
+
+impl Default for GameState {
+    fn default() -> Self {
+        GameState::Game
+    }
 }

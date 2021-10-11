@@ -1,30 +1,23 @@
 use super::*;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct World {
     state: GameState,
     player: Player,
+    stage: Stage,
     projectiles: Vec<Projectile>,
     enemies: Vec<Enemy>,
-    terrain: Vec<Enemy>,
+    terrain: Vec<Terrain>,
 }
 
-impl Default for World {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Stage {
+    Test,
+}
+
+impl Default for Stage {
     fn default() -> Self {
-        World {
-            state: GameState::Game,
-            player: Player::default(),
-            projectiles: Vec::new(),
-            enemies: (0..5).map(|_| Enemy::default()).collect(),
-            terrain: vec![Enemy {
-                hp: 0,
-                x: 200.0,
-                y: 200.0,
-                width: 100.0,
-                height: 100.0,
-                speed: 0.0,
-            }],
-        }
+        Stage::Test
     }
 }
 
@@ -73,54 +66,82 @@ impl Drawable for World {
 }
 
 impl World {
+    pub fn set_stage(&mut self, stage: Stage) {
+        match stage {
+            Stage::Test => {
+                self.enemies = (0..5).map(|_| Enemy::default()).collect();
+                self.terrain = (0..5).map(|_| Terrain::default()).collect();
+            }
+        }
+
+        self.state = GameState::Game;
+        self.player = Player::default();
+        self.projectiles.clear();
+        self.stage = stage;
+    }
+
+    pub fn reset(&mut self) {
+        self.set_stage(self.stage)
+    }
+
     pub fn tick(&mut self) {
-        if self.state != GameState::Game {
-            return;
-        }
-
-        self.handle_input();
-        self.player.tick();
-
-        for projectile in &mut self.projectiles {
-            projectile.tick();
-
-            for enemy in &mut self.enemies {
-                if enemy.collides_with(projectile) {
-                    enemy.hp -= projectile.damage as i32;
-                    projectile.active = false;
+        match self.state {
+            GameState::Defeat => {
+                if is_key_pressed(KeyCode::Enter) {
+                    self.reset();
                 }
             }
-
-            if projectile.fully_offscreen() {
-                projectile.active = false;
-            }
-        }
-
-        for enemy in &mut self.enemies {
-            let mut desired_movement = enemy.desired_movement();
-            for t in &self.terrain {
-                desired_movement = enemy.handle_collision(desired_movement, t);
-            }
-            enemy.move_by(desired_movement);
-            enemy.tick();
-
-            if self.player.state == PlayerState::Ok {
-                if enemy.collides_with(&self.player) {
-                    self.player.hp -= 1;
-                    self.player.state = PlayerState::Invulnerable(get_time() + 1.0);
+            GameState::Victory => {
+                if is_key_pressed(KeyCode::Enter) {
+                    self.reset();
                 }
             }
-        }
+            GameState::Game => {
+                self.handle_input();
+                self.player.tick();
 
-        self.projectiles.retain(|projectile| projectile.active);
-        self.enemies.retain(|enemy| enemy.hp > 0);
+                for projectile in &mut self.projectiles {
+                    projectile.tick();
 
-        if self.player.hp <= 0 {
-            self.state = GameState::Defeat;
-        }
+                    for enemy in &mut self.enemies {
+                        if enemy.collides_with(projectile) {
+                            enemy.hp -= projectile.damage as i32;
+                            projectile.active = false;
+                        }
+                    }
 
-        if self.enemies.is_empty() {
-            self.state = GameState::Victory;
+                    if projectile.fully_offscreen() {
+                        projectile.active = false;
+                    }
+                }
+
+                for enemy in &mut self.enemies {
+                    let mut desired_movement = enemy.desired_movement();
+                    for t in &self.terrain {
+                        desired_movement = enemy.handle_collision(desired_movement, t);
+                    }
+                    enemy.move_by(desired_movement);
+                    enemy.tick();
+
+                    if self.player.state == PlayerState::Ok {
+                        if enemy.collides_with(&self.player) {
+                            self.player.hp -= 1;
+                            self.player.state = PlayerState::Invulnerable(get_time() + 1.0);
+                        }
+                    }
+                }
+
+                self.projectiles.retain(|projectile| projectile.active);
+                self.enemies.retain(|enemy| enemy.hp > 0);
+
+                if self.player.hp <= 0 {
+                    self.state = GameState::Defeat;
+                }
+
+                if self.enemies.is_empty() {
+                    self.state = GameState::Victory;
+                }
+            }
         }
     }
 
