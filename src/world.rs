@@ -70,7 +70,14 @@ impl World {
         match stage {
             Stage::Test => {
                 self.enemies = (0..5).map(|_| Enemy::default()).collect();
-                self.terrain = (0..5).map(|_| Terrain::default()).collect();
+                self.terrain = (0..5)
+                    .map(|_| Terrain::default())
+                    .chain((0..3).map(|_| {
+                        let mut f = Terrain::default();
+                        f.kind = TerrainKind::Flower;
+                        f
+                    }))
+                    .collect();
             }
         }
 

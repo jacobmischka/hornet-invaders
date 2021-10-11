@@ -9,9 +9,10 @@ pub struct Terrain {
     pub kind: TerrainKind,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TerrainKind {
     Block,
+    Flower,
 }
 
 impl Default for Terrain {
@@ -39,15 +40,20 @@ impl Terrain {}
 
 impl Drawable for Terrain {
     fn draw(&self) {
-        draw_rectangle(
-            self.x,
-            self.y,
-            self.width,
-            self.height,
-            match self.kind {
-                _ => GREEN,
-            },
-        );
+        match self.kind {
+            TerrainKind::Block => draw_rectangle(self.x, self.y, self.width, self.height, MAGENTA),
+            TerrainKind::Flower => {
+                let half_width = self.width / 2.0;
+                draw_rectangle(
+                    self.x + self.width * 0.25,
+                    self.y + half_width,
+                    half_width,
+                    self.height - half_width,
+                    GREEN,
+                );
+                draw_circle(self.x + half_width, self.y + half_width, half_width, YELLOW);
+            }
+        }
     }
 }
 
