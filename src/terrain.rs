@@ -1,5 +1,7 @@
 use super::*;
 
+use std::f32::consts::{FRAC_PI_3, PI};
+
 #[derive(Debug)]
 pub struct Terrain {
     pub x: f32,
@@ -44,14 +46,29 @@ impl Drawable for Terrain {
             TerrainKind::Block => draw_rectangle(self.x, self.y, self.width, self.height, MAGENTA),
             TerrainKind::Flower => {
                 let half_width = self.width / 2.0;
+                let mid_x = self.x + half_width;
+                let mid_y = self.y + half_width;
+
                 draw_rectangle(
-                    self.x + self.width * 0.25,
+                    self.x + self.width / 4.0,
                     self.y + half_width,
                     half_width,
                     self.height - half_width,
                     GREEN,
                 );
-                draw_circle(self.x + half_width, self.y + half_width, half_width, YELLOW);
+
+                let hypot = self.width / 3.0;
+                let radius = self.width / 5.0;
+
+                for i in 0..6 {
+                    let t = i as f32 * FRAC_PI_3;
+                    let opposite = t.sin() * hypot;
+                    let adjacent = t.cos() * hypot;
+
+                    draw_circle(mid_x + adjacent, mid_y + opposite, radius, YELLOW);
+                }
+
+                draw_circle(mid_x, mid_y, radius, WHITE);
             }
         }
     }
