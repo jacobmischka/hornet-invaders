@@ -117,6 +117,12 @@ impl World {
                         }
                     }
 
+                    for terrain in &mut self.terrain {
+                        if terrain.collides_with(projectile) {
+                            projectile.active = false;
+                        }
+                    }
+
                     if projectile.fully_offscreen() {
                         projectile.active = false;
                     }
