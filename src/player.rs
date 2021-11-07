@@ -6,12 +6,12 @@ pub struct Player {
     pub max_hp: i32,
     pub x: f32,
     pub y: f32,
-    pub width: f32,
-    pub height: f32,
+    pub radius: f32,
     pub speed: f32,
     pub max_projectiles: usize,
     pub damage: u32,
     pub state: PlayerState,
+    pub direction: Direction,
 }
 
 impl Actor for Player {
@@ -24,11 +24,12 @@ impl Actor for Player {
     }
 
     fn bounding_box(&self) -> Rect {
+        let diameter = self.radius * 2.0;
         Rect {
-            x: self.x,
-            y: self.y,
-            w: self.width,
-            h: self.height,
+            x: self.x - self.radius,
+            y: self.y - self.radius,
+            w: diameter,
+            h: diameter,
         }
     }
 }
@@ -73,63 +74,147 @@ impl Player {
             dx -= self.speed;
         }
 
+        if is_key_pressed(KeyCode::W) {
+            self.direction = Direction::Up;
+        } else if is_key_pressed(KeyCode::D) {
+            self.direction = Direction::Right;
+        } else if is_key_pressed(KeyCode::S) {
+            self.direction = Direction::Down;
+        } else if is_key_pressed(KeyCode::A) {
+            self.direction = Direction::Left;
+        }
+
         Vec2::new(dx, dy)
     }
 
     pub fn shoot(&self, direction: Direction) -> Projectile {
+        let projectile_speed = 10.0;
+
         Projectile {
             active: true,
-            x: self.x + self.width / 2.0,
-            y: self.y + self.height / 2.0,
-            radius: 5.0,
+            x: self.x,
+            y: self.y,
+            radius: 20.0,
             damage: self.damage,
-            direction: direction.unit_vec() * 10.0,
-        }
-    }
-}
-
-pub enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-impl Direction {
-    pub fn unit_vec(&self) -> Vec2 {
-        match self {
-            Direction::Up => Vec2::new(0.0, -1.0),
-            Direction::Down => Vec2::new(0.0, 1.0),
-            Direction::Left => Vec2::new(-1.0, 0.0),
-            Direction::Right => Vec2::new(1.0, 0.0),
+            velocity: direction.unit_vec() * projectile_speed,
+            direction,
         }
     }
 }
 
 impl Drawable for Player {
     fn draw(&self) {
-        draw_rectangle(self.x, self.y, self.width, self.height, self.state.into());
+        draw_circle(self.x, self.y, self.radius, self.state.into());
+        match self.direction {
+            Direction::Up => {
+                // head
+                draw_circle(
+                    self.x,
+                    self.y - self.radius,
+                    self.radius * 0.6,
+                    self.state.into(),
+                );
+
+                // stripe
+                draw_rectangle(
+                    self.x - self.radius,
+                    self.y - self.radius * 0.1,
+                    self.radius * 2.0,
+                    self.radius * 0.2,
+                    BLACK,
+                );
+
+                // wings
+                draw_circle(self.x - self.radius, self.y, self.radius * 0.5, WHITE);
+                draw_circle(self.x + self.radius, self.y, self.radius * 0.5, WHITE);
+            }
+            Direction::Down => {
+                // head
+                draw_circle(
+                    self.x,
+                    self.y + self.radius,
+                    self.radius * 0.6,
+                    self.state.into(),
+                );
+
+                // stripe
+                draw_rectangle(
+                    self.x - self.radius,
+                    self.y - self.radius * 0.1,
+                    self.radius * 2.0,
+                    self.radius * 0.2,
+                    BLACK,
+                );
+
+                // wings
+                draw_circle(self.x - self.radius, self.y, self.radius * 0.5, WHITE);
+                draw_circle(self.x + self.radius, self.y, self.radius * 0.5, WHITE);
+            }
+            Direction::Left => {
+                // head
+                draw_circle(
+                    self.x - self.radius,
+                    self.y,
+                    self.radius * 0.6,
+                    self.state.into(),
+                );
+
+                // stripe
+                draw_rectangle(
+                    self.x - self.radius * 0.1,
+                    self.y - self.radius,
+                    self.radius * 0.2,
+                    self.radius * 2.0,
+                    BLACK,
+                );
+
+                // wings
+                draw_circle(self.x, self.y - self.radius, self.radius * 0.5, WHITE);
+                draw_circle(self.x, self.y + self.radius, self.radius * 0.5, WHITE);
+            }
+            Direction::Right => {
+                // head
+                draw_circle(
+                    self.x + self.radius,
+                    self.y,
+                    self.radius * 0.6,
+                    self.state.into(),
+                );
+
+                // stripe
+                draw_rectangle(
+                    self.x - self.radius * 0.1,
+                    self.y - self.radius,
+                    self.radius * 0.2,
+                    self.radius * 2.0,
+                    BLACK,
+                );
+
+                // wings
+                draw_circle(self.x, self.y - self.radius, self.radius * 0.5, WHITE);
+                draw_circle(self.x, self.y + self.radius, self.radius * 0.5, WHITE);
+            }
+        }
     }
 }
 
 impl Default for Player {
     fn default() -> Self {
-        let width = 25.0;
-        let height = 25.0;
+        let radius = 25.0;
         let speed = 10.0;
         let max_hp = 3;
 
         Player {
             hp: max_hp,
             max_hp,
-            x: screen_width() / 2.0 - width / 2.0,
-            y: screen_height() / 2.0 - height / 2.0,
-            width,
-            height,
+            x: screen_width() / 2.0,
+            y: screen_height() / 2.0,
+            radius,
             speed,
             damage: 25,
             max_projectiles: 20,
             state: PlayerState::Ok,
+            direction: Direction::Up,
         }
     }
 }
@@ -143,8 +228,8 @@ pub enum PlayerState {
 impl From<PlayerState> for Color {
     fn from(state: PlayerState) -> Color {
         match state {
-            PlayerState::Ok => BLUE,
-            PlayerState::Invulnerable(_) => ORANGE,
+            PlayerState::Ok => YELLOW,
+            PlayerState::Invulnerable(_) => GRAY,
         }
     }
 }
@@ -156,28 +241,62 @@ pub struct Projectile {
     pub y: f32,
     pub radius: f32,
     pub damage: u32,
-    pub direction: Vec2,
+    pub direction: Direction,
+    pub velocity: Vec2,
 }
 
 impl Actor for Projectile {
     fn tick(&mut self) {
-        self.x += self.direction[0];
-        self.y += self.direction[1];
+        self.x += self.velocity[0];
+        self.y += self.velocity[1];
     }
 
     fn bounding_box(&self) -> Rect {
-        let wh = self.radius * 2.0;
+        let diameter = self.radius * 2.0;
         Rect {
             x: self.x - self.radius,
             y: self.y - self.radius,
-            w: wh,
-            h: wh,
+            w: diameter,
+            h: diameter,
         }
     }
 }
 
 impl Drawable for Projectile {
     fn draw(&self) {
-        draw_circle(self.x, self.y, self.radius, YELLOW);
+        match self.direction {
+            Direction::Up => {
+                draw_triangle(
+                    Vec2::new(self.x, self.y - self.radius),
+                    Vec2::new(self.x - self.radius / 2.0, self.y + self.radius),
+                    Vec2::new(self.x + self.radius / 2.0, self.y + self.radius),
+                    WHITE,
+                );
+            }
+            Direction::Down => {
+                draw_triangle(
+                    Vec2::new(self.x, self.y + self.radius),
+                    Vec2::new(self.x - self.radius / 2.0, self.y - self.radius),
+                    Vec2::new(self.x + self.radius / 2.0, self.y - self.radius),
+                    WHITE,
+                );
+            }
+            Direction::Right => {
+                draw_triangle(
+                    Vec2::new(self.x + self.radius, self.y),
+                    Vec2::new(self.x - self.radius, self.y + self.radius / 2.0),
+                    Vec2::new(self.x - self.radius, self.y - self.radius / 2.0),
+                    WHITE,
+                );
+            }
+            Direction::Left => {
+                draw_triangle(
+                    Vec2::new(self.x - self.radius, self.y),
+                    Vec2::new(self.x + self.radius, self.y + self.radius / 2.0),
+                    Vec2::new(self.x + self.radius, self.y - self.radius / 2.0),
+                    WHITE,
+                );
+            }
+        }
     }
 }
