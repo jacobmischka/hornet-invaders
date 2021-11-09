@@ -63,24 +63,18 @@ impl Player {
         let mut dy = 0.0;
         if is_key_down(KeyCode::W) {
             dy -= self.speed;
+            self.direction = Direction::Up;
         }
         if is_key_down(KeyCode::S) {
             dy += self.speed;
+            self.direction = Direction::Down;
         }
         if is_key_down(KeyCode::D) {
             dx += self.speed;
+            self.direction = Direction::Right;
         }
         if is_key_down(KeyCode::A) {
             dx -= self.speed;
-        }
-
-        if is_key_pressed(KeyCode::W) {
-            self.direction = Direction::Up;
-        } else if is_key_pressed(KeyCode::D) {
-            self.direction = Direction::Right;
-        } else if is_key_pressed(KeyCode::S) {
-            self.direction = Direction::Down;
-        } else if is_key_pressed(KeyCode::A) {
             self.direction = Direction::Left;
         }
 
