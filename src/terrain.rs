@@ -15,6 +15,7 @@ pub struct Terrain {
 pub enum TerrainKind {
     Block,
     Flower,
+    Hive,
 }
 
 impl Default for Terrain {
@@ -69,6 +70,28 @@ impl Drawable for Terrain {
                 }
 
                 draw_circle(mid_x, mid_y, radius, WHITE);
+            }
+            TerrainKind::Hive => {
+                const HIVE_COLOR: Color = BROWN;
+                const NUM_CHUNKS: usize = 5;
+
+                let chunk_height = self.height / NUM_CHUNKS as f32;
+                let mut y = self.y + self.height - chunk_height;
+
+                let mut width = self.width;
+                let chunk_width_delta = (self.width * 0.75) / NUM_CHUNKS as f32;
+
+                for _ in 0..NUM_CHUNKS {
+                    let x = self.x + (self.width - width) / 2.0;
+                    draw_rectangle(x, y, width, chunk_height, HIVE_COLOR);
+                    let r = chunk_height / 2.0;
+
+                    draw_circle(x, y + r, r, HIVE_COLOR);
+                    draw_circle(x + width, y + r, r, HIVE_COLOR);
+
+                    width -= chunk_width_delta;
+                    y -= chunk_height;
+                }
             }
         }
     }

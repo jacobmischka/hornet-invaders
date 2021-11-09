@@ -77,6 +77,13 @@ impl World {
                         f.kind = TerrainKind::Flower;
                         f
                     }))
+                    .chain((0..3).map(|_| {
+                        let mut f = Terrain::default();
+                        f.kind = TerrainKind::Hive;
+                        f.width = 100.0;
+                        f.height = 100.0;
+                        f
+                    }))
                     .collect();
             }
         }
