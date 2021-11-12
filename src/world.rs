@@ -8,6 +8,7 @@ pub struct World {
     projectiles: Vec<Projectile>,
     enemies: Vec<Enemy>,
     terrain: Vec<Terrain>,
+    hives: Vec<Hive>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -31,6 +32,10 @@ impl Drawable for World {
 
         for t in &self.terrain {
             t.draw();
+        }
+
+        for h in &self.hives {
+            h.draw();
         }
 
         self.player.draw();
@@ -77,14 +82,8 @@ impl World {
                         f.kind = TerrainKind::Flower;
                         f
                     }))
-                    .chain((0..3).map(|_| {
-                        let mut f = Terrain::default();
-                        f.kind = TerrainKind::Hive { hp: 5, max_hp: 5 };
-                        f.width = 100.0;
-                        f.height = 100.0;
-                        f
-                    }))
                     .collect();
+                self.hives = vec![Hive::default()];
             }
         }
 
@@ -125,7 +124,7 @@ impl World {
                     }
 
                     for terrain in &mut self.terrain {
-                        if terrain.collides_with(projectile) {
+                        if projectile.collides_with(terrain) {
                             projectile.active = false;
                         }
                     }
@@ -138,22 +137,18 @@ impl World {
                 for enemy in &mut self.enemies {
                     let mut desired_movement = enemy.desired_movement();
                     for t in &mut self.terrain {
-                        if !enemy.collides_with(t) {
-                            continue;
-                        }
-
-                        match &mut t.kind {
-                            TerrainKind::Hive { hp, .. } => {
-                                *hp -= 1;
-                                enemy.hp = 0;
-                                break;
-                            }
-                            _ => {}
-                        }
                         desired_movement = enemy.handle_collision(desired_movement, t);
                     }
                     enemy.move_by(desired_movement);
                     enemy.tick();
+
+                    for hive in &mut self.hives {
+                        if enemy.collides_with(hive) {
+                            hive.hp -= 1;
+                            enemy.hp = 0;
+                            break;
+                        }
+                    }
 
                     if self.player.state == PlayerState::Ok {
                         if enemy.collides_with(&self.player) {
@@ -165,8 +160,9 @@ impl World {
 
                 self.projectiles.retain(|projectile| projectile.active);
                 self.enemies.retain(|enemy| enemy.hp > 0);
+                self.hives.retain(|hive| hive.hp > 0);
 
-                if self.player.hp <= 0 {
+                if self.player.hp <= 0 || self.hives.is_empty() {
                     self.state = GameState::Defeat;
                 }
 
