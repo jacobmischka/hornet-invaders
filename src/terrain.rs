@@ -1,6 +1,6 @@
 use super::*;
 
-use std::f32::consts::{FRAC_PI_3, PI};
+use std::f32::consts::FRAC_PI_3;
 
 #[derive(Debug)]
 pub struct Terrain {
@@ -15,7 +15,7 @@ pub struct Terrain {
 pub enum TerrainKind {
     Block,
     Flower,
-    Hive,
+    Hive { hp: i32, max_hp: i32 },
 }
 
 impl Default for Terrain {
@@ -71,8 +71,8 @@ impl Drawable for Terrain {
 
                 draw_circle(mid_x, mid_y, radius, WHITE);
             }
-            TerrainKind::Hive => {
-                const HIVE_COLOR: Color = BROWN;
+            TerrainKind::Hive { hp, max_hp } => {
+                let color = Color::new(0.9, 0.9 * (hp as f32 / max_hp as f32), 0.0, 1.0);
                 const NUM_CHUNKS: usize = 5;
 
                 let chunk_height = self.height / NUM_CHUNKS as f32;
@@ -83,11 +83,11 @@ impl Drawable for Terrain {
 
                 for _ in 0..NUM_CHUNKS {
                     let x = self.x + (self.width - width) / 2.0;
-                    draw_rectangle(x, y, width, chunk_height, HIVE_COLOR);
+                    draw_rectangle(x, y, width, chunk_height, color);
                     let r = chunk_height / 2.0;
 
-                    draw_circle(x, y + r, r, HIVE_COLOR);
-                    draw_circle(x + width, y + r, r, HIVE_COLOR);
+                    draw_circle(x, y + r, r, color);
+                    draw_circle(x + width, y + r, r, color);
 
                     width -= chunk_width_delta;
                     y -= chunk_height;
