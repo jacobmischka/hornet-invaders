@@ -11,6 +11,15 @@ pub struct Terrain {
     pub kind: TerrainKind,
 }
 
+impl Positioned for Terrain {
+    fn x(&self) -> f32 {
+        self.x
+    }
+    fn y(&self) -> f32 {
+        self.y
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TerrainKind {
     Block,
@@ -156,5 +165,14 @@ impl Actor for Hive {
             w: self.width,
             h: self.height,
         }
+    }
+}
+
+impl Positioned for Hive {
+    fn x(&self) -> f32 {
+        self.x
+    }
+    fn y(&self) -> f32 {
+        self.y
     }
 }

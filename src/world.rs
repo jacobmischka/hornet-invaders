@@ -4,22 +4,12 @@ use super::*;
 pub struct World {
     state: GameState,
     player: Player,
-    stage: Stage,
+    stage: usize,
     projectiles: Vec<Projectile>,
     enemies: Vec<Enemy>,
+    enemies_remaining: usize,
     terrain: Vec<Terrain>,
     hives: Vec<Hive>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Stage {
-    Test,
-}
-
-impl Default for Stage {
-    fn default() -> Self {
-        Stage::Test
-    }
 }
 
 impl Drawable for World {
@@ -45,24 +35,35 @@ impl Drawable for World {
         }
 
         if self.state == GameState::Victory {
-            let text = "YOU WIN";
-            let font_size = 100;
-            let size = measure_text(text, None, font_size, 1.0);
+            draw_centered_text(
+                "YOU WIN",
+                100,
+                screen_width() / 2.0,
+                screen_height() / 2.0,
+                WHITE,
+            );
 
-            draw_text(
-                text,
-                screen_width() / 2.0 - size.width / 2.0,
-                screen_height() / 3.0 - size.height / 2.0,
-                font_size as f32,
+            draw_centered_text(
+                "Press ENTER to progress",
+                50,
+                screen_width() / 2.0,
+                screen_height() / 2.0 + 100.0,
                 WHITE,
             );
         } else if self.state == GameState::Defeat {
             draw_centered_text(
-                "YOU DIED",
+                "GAME OVER",
                 100,
                 screen_width() / 2.0,
                 screen_height() / 2.0,
                 RED,
+            );
+            draw_centered_text(
+                "Press ENTER to try again",
+                50,
+                screen_width() / 2.0,
+                screen_height() / 2.0 + 100.0,
+                WHITE,
             );
         }
 
@@ -71,30 +72,29 @@ impl Drawable for World {
 }
 
 impl World {
-    pub fn set_stage(&mut self, stage: Stage) {
-        match stage {
-            Stage::Test => {
-                self.enemies = (0..5).map(|_| Enemy::default()).collect();
-                self.terrain = (0..5)
-                    .map(|_| Terrain::default())
-                    .chain((0..3).map(|_| {
-                        let mut f = Terrain::default();
-                        f.kind = TerrainKind::Flower;
-                        f
-                    }))
-                    .collect();
-                self.hives = vec![Hive::default()];
-            }
-        }
+    pub fn reset(&mut self) {
+        self.terrain = (0..rand::gen_range(3, 10 + self.stage))
+            .map(|_| {
+                let mut f = Terrain::default();
+                f.kind = TerrainKind::Flower;
+                f
+            })
+            .collect();
+        self.hives = (0..3).map(|_| Hive::default()).collect();
 
+        self.enemies_remaining = (self.stage + 1) * 10;
         self.state = GameState::Game;
         self.player = Player::default();
+        self.enemies.clear();
         self.projectiles.clear();
-        self.stage = stage;
     }
 
-    pub fn reset(&mut self) {
-        self.set_stage(self.stage)
+    pub fn max_enemies(&self) -> usize {
+        (self.stage + 1) * 5
+    }
+
+    pub fn stage_speed(&self) -> f32 {
+        self.stage as f32 * 0.5 + 1.0
     }
 
     pub fn tick(&mut self) {
@@ -106,12 +106,18 @@ impl World {
             }
             GameState::Victory => {
                 if is_key_pressed(KeyCode::Enter) {
+                    self.stage += 1;
                     self.reset();
                 }
             }
             GameState::Game => {
                 self.handle_input();
                 self.player.tick();
+
+                if self.enemies.len() < self.max_enemies() && self.enemies_remaining > 0 {
+                    self.enemies.push(Enemy::with_speed(self.stage_speed()));
+                    self.enemies_remaining -= 1;
+                }
 
                 for projectile in &mut self.projectiles {
                     projectile.tick();
@@ -135,7 +141,7 @@ impl World {
                 }
 
                 for enemy in &mut self.enemies {
-                    let mut desired_movement = enemy.desired_movement();
+                    let mut desired_movement = enemy.desired_movement(&self.hives);
                     for t in &mut self.terrain {
                         desired_movement = enemy.handle_collision(desired_movement, t);
                     }
@@ -164,10 +170,12 @@ impl World {
 
                 if self.player.hp <= 0 || self.hives.is_empty() {
                     self.state = GameState::Defeat;
+                    return;
                 }
 
                 if self.enemies.is_empty() {
                     self.state = GameState::Victory;
+                    return;
                 }
             }
         }

@@ -46,9 +46,16 @@ trait Drawable {
     fn draw(&self);
 }
 
-trait Mobile: Actor {
+trait Positioned: Actor {
     fn x(&self) -> f32;
     fn y(&self) -> f32;
+
+    fn pos(&self) -> Vec2 {
+        Vec2::new(self.x(), self.y())
+    }
+}
+
+trait Mobile: Positioned {
     fn move_by(&mut self, vector: Vec2);
 
     fn screen_constrain(&mut self) {

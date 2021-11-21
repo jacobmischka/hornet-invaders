@@ -34,13 +34,16 @@ impl Actor for Player {
     }
 }
 
-impl Mobile for Player {
+impl Positioned for Player {
     fn x(&self) -> f32 {
         self.x
     }
     fn y(&self) -> f32 {
         self.y
     }
+}
+
+impl Mobile for Player {
     fn move_by(&mut self, vector: Vec2) {
         self.x += vector[0];
         self.y += vector[1];
