@@ -10,15 +10,13 @@ pub struct Enemy {
     pub width: f32,
     pub height: f32,
     pub speed: f32,
+    pub direction: Direction,
     pub target: Option<Vec2>,
 }
 
 impl Enemy {
     pub fn with_speed(speed: f32) -> Self {
-        let width = 50.0;
-        let height = 50.0;
-
-        let dir = vec![
+        let direction = vec![
             Direction::Up,
             Direction::Right,
             Direction::Down,
@@ -28,14 +26,19 @@ impl Enemy {
         .copied()
         .unwrap();
 
+        let (width, height) = match direction {
+            Direction::Up | Direction::Down => (25.0, 100.0),
+            Direction::Left | Direction::Right => (100.0, 25.0),
+        };
+
         Enemy {
             hp: 50,
-            x: match dir {
+            x: match direction {
                 Direction::Up | Direction::Down => rand::gen_range(0.0, screen_width()),
                 Direction::Left => 0.0 - width,
                 Direction::Right => screen_width(),
             },
-            y: match dir {
+            y: match direction {
                 Direction::Left | Direction::Right => rand::gen_range(0.0, screen_width()),
                 Direction::Up => 0.0 - width,
                 Direction::Down => screen_height(),
@@ -43,6 +46,7 @@ impl Enemy {
             width,
             height,
             speed,
+            direction,
             target: None,
         }
     }
@@ -93,15 +97,83 @@ impl Mobile for Enemy {
 
 impl Drawable for Enemy {
     fn draw(&self) {
-        draw_rectangle(
-            self.x,
-            self.y,
-            self.width,
-            self.height,
-            match self.hp {
-                0..=25 => ORANGE,
-                _ => RED,
-            },
-        );
+        let color = match self.hp {
+            0..=25 => RED,
+            _ => ORANGE,
+        };
+
+        let r = self.width.min(self.height) / 2.0;
+
+        // thorax
+        match self.direction {
+            Direction::Up | Direction::Down => {
+                draw_rectangle(self.x, self.y + r, self.width, self.height - 2.0 * r, color);
+            }
+            Direction::Left | Direction::Right => {
+                draw_rectangle(self.x + r, self.y, self.width - 2.0 * r, self.height, color);
+            }
+        }
+
+        // stripes
+        match self.direction {
+            Direction::Up | Direction::Down => {
+                draw_rectangle(
+                    self.x,
+                    self.y + self.height / 3.0 - self.height / 10.0,
+                    self.width,
+                    self.height / 5.0,
+                    BLACK,
+                );
+                draw_rectangle(
+                    self.x,
+                    self.y + self.height * 2.0 / 3.0 - self.height / 10.0,
+                    self.width,
+                    self.height / 5.0,
+                    BLACK,
+                );
+            }
+            Direction::Left | Direction::Right => {
+                draw_rectangle(
+                    self.x + self.width / 3.0 - self.width / 10.0,
+                    self.y,
+                    self.width / 5.0,
+                    self.height,
+                    BLACK,
+                );
+                draw_rectangle(
+                    self.x + self.width * 2.0 / 3.0 - self.width / 10.0,
+                    self.y,
+                    self.width / 5.0,
+                    self.height,
+                    BLACK,
+                );
+            }
+        }
+
+        // ends
+        match self.direction {
+            Direction::Up | Direction::Down => {
+                draw_circle(self.x + r, self.y + r, r, color);
+                draw_circle(self.x + r, self.y + self.height - r, r, color);
+            }
+            Direction::Left | Direction::Right => {
+                draw_circle(self.x + r, self.y + r, r, color);
+                draw_circle(self.x + self.width - r, self.y + r, r, color);
+            }
+        }
+
+        // wings
+        match self.direction {
+            Direction::Up | Direction::Down => {
+                let y = self.y + self.height / 2.0;
+                draw_circle(self.x - r, y, r, LIGHTGRAY);
+                draw_circle(self.x + self.width + r, y, r, LIGHTGRAY);
+            }
+            Direction::Left | Direction::Right => {
+                let x = self.x + self.width / 2.0;
+                draw_circle(x, self.y - r, r, LIGHTGRAY);
+                draw_circle(x, self.y + self.height + r, r, LIGHTGRAY);
+            }
+        }
     }
 }

@@ -15,7 +15,7 @@ pub struct World {
 
 impl Drawable for World {
     fn draw(&self) {
-        clear_background(BLACK);
+        clear_background(BLUE);
 
         for enemy in &self.enemies {
             enemy.draw();
@@ -37,7 +37,7 @@ impl Drawable for World {
 
         if self.state == GameState::Victory {
             draw_centered_text(
-                "YOU WIN",
+                &format!("You saved {} hives!", self.hives.len()),
                 screen_width() / 2.0,
                 screen_height() / 2.0,
                 100,
