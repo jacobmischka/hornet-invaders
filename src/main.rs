@@ -119,7 +119,7 @@ trait Mobile: Positioned {
 }
 
 trait Actor: Drawable + std::fmt::Debug {
-    fn tick(&mut self);
+    fn tick(&mut self) {}
 
     fn bounding_box(&self) -> Rect;
 

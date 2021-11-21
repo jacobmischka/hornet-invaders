@@ -65,10 +65,6 @@ impl Default for Enemy {
 }
 
 impl Actor for Enemy {
-    fn tick(&mut self) {
-        //
-    }
-
     fn bounding_box(&self) -> Rect {
         Rect {
             x: self.x,

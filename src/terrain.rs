@@ -82,10 +82,6 @@ impl Drawable for Terrain {
 }
 
 impl Actor for Terrain {
-    fn tick(&mut self) {
-        // Nothing to do
-    }
-
     fn bounding_box(&self) -> Rect {
         Rect {
             x: self.x,
@@ -154,10 +150,6 @@ impl Drawable for Hive {
 }
 
 impl Actor for Hive {
-    fn tick(&mut self) {
-        // Nothing to do
-    }
-
     fn bounding_box(&self) -> Rect {
         Rect {
             x: self.x,
