@@ -17,7 +17,6 @@ use world::*;
 fn window_conf() -> Conf {
     Conf {
         window_title: "Hello, Macroquad!".to_owned(),
-        high_dpi: true,
         window_width: 1600,
         window_height: 1200,
         ..Default::default()
@@ -32,14 +31,9 @@ async fn main() {
     loop {
         world.tick();
         world.draw();
-        draw_fps();
 
         next_frame().await
     }
-}
-
-fn draw_fps() {
-    draw_text(&get_fps().to_string(), 20.0, 20.0, 30.0, DARKGRAY);
 }
 
 trait Drawable {

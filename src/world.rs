@@ -5,6 +5,7 @@ pub struct World {
     state: GameState,
     player: Player,
     stage: usize,
+    hives_saved: usize,
     projectiles: Vec<Projectile>,
     enemies: Vec<Enemy>,
     enemies_remaining: usize,
@@ -37,42 +38,48 @@ impl Drawable for World {
         if self.state == GameState::Victory {
             draw_centered_text(
                 "YOU WIN",
-                100,
                 screen_width() / 2.0,
                 screen_height() / 2.0,
+                100,
                 WHITE,
             );
 
             draw_centered_text(
                 "Press ENTER to progress",
-                50,
                 screen_width() / 2.0,
                 screen_height() / 2.0 + 100.0,
+                50,
                 WHITE,
             );
         } else if self.state == GameState::Defeat {
             draw_centered_text(
                 "GAME OVER",
-                100,
                 screen_width() / 2.0,
                 screen_height() / 2.0,
+                100,
                 RED,
             );
             draw_centered_text(
                 "Press ENTER to try again",
-                50,
                 screen_width() / 2.0,
                 screen_height() / 2.0 + 100.0,
+                50,
                 WHITE,
             );
         }
 
-        self.player.draw_hp();
+        self.draw_hud();
     }
 }
 
 impl World {
     pub fn reset(&mut self) {
+        self.stage = 0;
+        self.hives_saved = 0;
+        self.set_stage();
+    }
+
+    pub fn set_stage(&mut self) {
         self.terrain = (0..rand::gen_range(3, 10 + self.stage))
             .map(|_| {
                 let mut f = Terrain::default();
@@ -81,7 +88,6 @@ impl World {
             })
             .collect();
         self.hives = (0..3).map(|_| Hive::default()).collect();
-
         self.enemies_remaining = (self.stage + 1) * 10;
         self.state = GameState::Game;
         self.player = Player::default();
@@ -107,7 +113,8 @@ impl World {
             GameState::Victory => {
                 if is_key_pressed(KeyCode::Enter) {
                     self.stage += 1;
-                    self.reset();
+                    self.hives_saved += self.hives.len();
+                    self.set_stage();
                 }
             }
             GameState::Game => {
@@ -205,5 +212,24 @@ impl World {
                 self.projectiles.push(self.player.shoot(Direction::Right));
             }
         }
+    }
+
+    fn draw_hud(&self) {
+        self.player.draw_hp();
+        draw_text(
+            &format!("Hives saved: {}", self.hives_saved),
+            20.0,
+            50.0,
+            50.0,
+            LIGHTGRAY,
+        );
+        draw_h_centered_text(
+            &format!("Stage: {}", self.stage + 1),
+            screen_width() / 2.0,
+            50.0,
+            50,
+            LIGHTGRAY,
+        );
+        draw_text(&get_fps().to_string(), 20.0, 20.0, 30.0, DARKGRAY);
     }
 }

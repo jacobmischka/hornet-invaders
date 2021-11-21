@@ -54,9 +54,9 @@ impl Player {
     pub fn draw_hp(&self) {
         draw_right_aligned_text(
             &format!("HP: {} / {}", self.hp, self.max_hp),
-            50,
             screen_width() - 20.0,
             50.0,
+            50,
             LIGHTGRAY,
         );
     }
