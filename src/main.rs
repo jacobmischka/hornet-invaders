@@ -16,7 +16,7 @@ use world::*;
 
 fn window_conf() -> Conf {
     Conf {
-        window_title: "Hello, Macroquad!".to_owned(),
+        window_title: "Hornet Invaders".to_owned(),
         window_width: 1600,
         window_height: 1200,
         ..Default::default()

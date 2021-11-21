@@ -140,7 +140,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "hello-macroquad"
+name = "hornet-invaders"
 version = "0.1.0"
 dependencies = [
  "macroquad",
