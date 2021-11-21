@@ -35,6 +35,16 @@ impl Drawable for World {
             projectile.draw();
         }
 
+        if self.state != GameState::Game {
+            draw_rectangle(
+                0.0,
+                0.0,
+                screen_width(),
+                screen_height(),
+                Color::new(0.0, 0.0, 0.0, 0.5),
+            );
+        }
+
         if self.state == GameState::Victory {
             draw_centered_text(
                 &format!("You saved {} hives!", self.hives.len()),
@@ -64,6 +74,14 @@ impl Drawable for World {
                 screen_width() / 2.0,
                 screen_height() / 2.0 + 100.0,
                 50,
+                WHITE,
+            );
+        } else if self.state == GameState::Pause {
+            draw_centered_text(
+                "PAUSED",
+                screen_width() / 2.0,
+                screen_height() / 2.0,
+                100,
                 WHITE,
             );
         }
@@ -115,6 +133,11 @@ impl World {
                     self.stage += 1;
                     self.hives_saved += self.hives.len();
                     self.set_stage();
+                }
+            }
+            GameState::Pause => {
+                if is_key_pressed(KeyCode::Escape) {
+                    self.state = GameState::Game;
                 }
             }
             GameState::Game => {
@@ -189,6 +212,11 @@ impl World {
     }
 
     fn handle_input(&mut self) {
+        if is_key_pressed(KeyCode::Escape) {
+            self.state = GameState::Pause;
+            return;
+        }
+
         let mut player_movement = self.player.handle_input();
 
         for t in &self.terrain {

@@ -177,6 +177,7 @@ impl<A: Actor + Drawable> Actor for Box<A> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum GameState {
     Game,
+    Pause,
     Victory,
     Defeat,
 }
