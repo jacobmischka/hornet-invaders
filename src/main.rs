@@ -26,7 +26,6 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut world = World::default();
-    world.reset();
 
     loop {
         world.tick();
@@ -176,6 +175,7 @@ impl<A: Actor + Drawable> Actor for Box<A> {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum GameState {
+    Pregame,
     Game,
     Pause,
     Victory,
@@ -184,7 +184,7 @@ enum GameState {
 
 impl Default for GameState {
     fn default() -> Self {
-        GameState::Game
+        GameState::Pregame
     }
 }
 

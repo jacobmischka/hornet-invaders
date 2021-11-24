@@ -61,6 +61,21 @@ impl Drawable for World {
                 50,
                 WHITE,
             );
+        } else if self.state == GameState::Pregame {
+            draw_centered_text(
+                "Hornet Invaders",
+                screen_width() / 2.0,
+                screen_height() / 2.0,
+                100,
+                WHITE,
+            );
+            draw_centered_text(
+                "Press ENTER to begin",
+                screen_width() / 2.0,
+                screen_height() / 2.0 + 100.0,
+                50,
+                WHITE,
+            );
         } else if self.state == GameState::Defeat {
             draw_centered_text(
                 "GAME OVER",
@@ -123,7 +138,7 @@ impl World {
 
     pub fn tick(&mut self) {
         match self.state {
-            GameState::Defeat => {
+            GameState::Pregame | GameState::Defeat => {
                 if is_key_pressed(KeyCode::Enter) {
                     self.reset();
                 }
