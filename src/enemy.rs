@@ -2,6 +2,8 @@ use super::*;
 
 use macroquad::rand::ChooseRandom;
 
+const IMMOBILE_VOID_TIME_SECS: f64 = 5.0;
+
 #[derive(Debug)]
 pub struct Enemy {
     pub hp: i32,
@@ -12,6 +14,7 @@ pub struct Enemy {
     pub speed: f32,
     pub direction: Direction,
     pub target: Option<Vec2>,
+    last_position: (f32, f32, f64),
 }
 
 impl Enemy {
@@ -31,23 +34,28 @@ impl Enemy {
             Direction::Left | Direction::Right => (100.0, 25.0),
         };
 
+        let x = match direction {
+            Direction::Up | Direction::Down => rand::gen_range(0.0, screen_width()),
+            Direction::Left => 0.0 - width,
+            Direction::Right => screen_width(),
+        };
+
+        let y = match direction {
+            Direction::Left | Direction::Right => rand::gen_range(0.0, screen_width()),
+            Direction::Up => 0.0 - width,
+            Direction::Down => screen_height(),
+        };
+
         Enemy {
             hp: 50,
-            x: match direction {
-                Direction::Up | Direction::Down => rand::gen_range(0.0, screen_width()),
-                Direction::Left => 0.0 - width,
-                Direction::Right => screen_width(),
-            },
-            y: match direction {
-                Direction::Left | Direction::Right => rand::gen_range(0.0, screen_width()),
-                Direction::Up => 0.0 - width,
-                Direction::Down => screen_height(),
-            },
+            x,
+            y,
             width,
             height,
             speed,
             direction,
             target: None,
+            last_position: (x, y, get_time()),
         }
     }
 
@@ -69,6 +77,13 @@ impl Default for Enemy {
 }
 
 impl Actor for Enemy {
+    fn tick(&mut self) {
+        let (x, y, time) = self.last_position;
+        if x == self.x && y == self.y && (get_time() - time) > IMMOBILE_VOID_TIME_SECS {
+            self.hp = 0;
+        }
+    }
+
     fn bounding_box(&self) -> Rect {
         Rect {
             x: self.x,
@@ -90,8 +105,12 @@ impl Positioned for Enemy {
 
 impl Mobile for Enemy {
     fn move_by(&mut self, vector: Vec2) {
-        self.x += vector[0];
-        self.y += vector[1];
+        let [dx, dy] = vector.as_ref();
+        if dx.abs() >= 0.001 && dy.abs() >= 0.001 {
+            self.x += *dx;
+            self.y += *dy;
+            self.last_position = (self.x, self.y, get_time());
+        }
     }
 }
 
